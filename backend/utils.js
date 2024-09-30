@@ -1,5 +1,4 @@
 import jwt from 'jsonwebtoken';
-import mg from 'mailgun-js';
 
 export const baseUrl = () =>
   process.env.BASE_URL
@@ -19,7 +18,7 @@ export const generateToken = (user) => {
     process.env.JWT_SECRET,
     {
       expiresIn: '30d',
-    }
+    },
   );
 };
 
@@ -48,12 +47,6 @@ export const isAdmin = (req, res, next) => {
   }
 };
 
-export const mailgun = () =>
-  mg({
-    apiKey: process.env.MAILGUN_API_KEY,
-    domain: process.env.MAILGUN_DOMIAN,
-  });
-
 export const payOrderEmailTemplate = (order) => {
   return `<h1>Thanks for shopping with us</h1>
   <p>
@@ -76,7 +69,7 @@ export const payOrderEmailTemplate = (order) => {
     <td align="center">${item.quantity}</td>
     <td align="right"> $${item.price.toFixed(2)}</td>
     </tr>
-  `
+  `,
     )
     .join('\n')}
   </tbody>
