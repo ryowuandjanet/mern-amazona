@@ -3,7 +3,8 @@ import bcrypt from 'bcryptjs';
 import expressAsyncHandler from 'express-async-handler';
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel.js';
-import { isAuth, isAdmin, generateToken, baseUrl, mailgun } from '../utils.js';
+import { isAuth, isAdmin, generateToken, baseUrl } from '../utils.js';
+import nodemailer from 'nodemailer';
 
 const userRouter = express.Router();
 
@@ -69,31 +70,36 @@ userRouter.post(
       user.resetToken = token;
       await user.save();
 
-      //reset link
-      console.log(`${baseUrl()}/reset-password/${token}`);
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.GMAIL_USER, // Store your email in an environment variable
+          pass: process.env.GMAIL_PASS, // Store your password in an environment variable
+        },
+      });
 
-      mailgun()
-        .messages()
-        .send(
-          {
-            from: 'Amazona <me@mg.yourdomain.com>',
-            to: `${user.name} <${user.email}>`,
-            subject: `Reset Password`,
-            html: ` 
-             <p>Please Click the following link to reset your password:</p> 
-             <a href="${baseUrl()}/reset-password/${token}"}>Reset Password</a>
-             `,
-          },
-          (error, body) => {
-            console.log(error);
-            console.log(body);
-          }
-        );
-      res.send({ message: 'We sent reset password link to your email.' });
+      const mailOptions = {
+        from: process.env.GMAIL_USER,
+        to: user.email, // Send to user's email
+        subject: 'Reset Your Password',
+        text: `Hello ${
+          user.name
+        },\n\nPlease reset your password by clicking the link below:\n\n${baseUrl()}/reset-password/${token}\n\nThank you!`,
+      };
+
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          console.log(error);
+          res.status(500).send({ message: 'Error sending email' });
+        } else {
+          console.log('Email sent: ' + info.response);
+          res.send({ message: 'We sent a reset password link to your email.' });
+        }
+      });
     } else {
       res.status(404).send({ message: 'User not found' });
     }
-  })
+  }),
 );
 
 userRouter.post(
