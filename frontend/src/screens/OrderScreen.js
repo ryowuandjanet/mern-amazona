@@ -322,7 +322,7 @@ export default function OrderScreen() {
                 </ListGroup.Item>
                 {order.paymentMethod === 'CashOnDelivery' ? (
                   <>
-                    {!order.isDelivered && (
+                    {!order.isDelivered && userInfo.isAdmin && (
                       <ListGroup.Item>
                         {loadingDeliver && <LoadingBox></LoadingBox>}
                         <div className="d-grid">
@@ -334,18 +334,15 @@ export default function OrderScreen() {
                     )}
                     {userInfo.isAdmin && order.isDelivered && !order.isPaid && (
                       <ListGroup.Item>
-                        {isPending ? (
-                          <LoadingBox />
-                        ) : (
-                          <div>
-                            <PayPalButtons
-                              createOrder={createOrder}
-                              onApprove={onApprove}
-                              onError={onError}
-                            ></PayPalButtons>
-                          </div>
-                        )}
                         {loadingPay && <LoadingBox></LoadingBox>}
+                        <div className="d-grid">
+                          <Button
+                            type="button"
+                            onClick={completePaymentHandler}
+                          >
+                            Complete Payment
+                          </Button>
+                        </div>
                       </ListGroup.Item>
                     )}
                   </>
@@ -367,26 +364,19 @@ export default function OrderScreen() {
                     </ListGroup.Item>
                   )
                 )}
-                {userInfo.isAdmin && order.isDelivered && !order.isPaid && (
-                  <ListGroup.Item>
-                    {loadingPay && <LoadingBox></LoadingBox>}
-                    <div className="d-grid">
-                      <Button type="button" onClick={completePaymentHandler}>
-                        Complete Payment
-                      </Button>
-                    </div>
-                  </ListGroup.Item>
-                )}
-                {userInfo.isAdmin && order.isPaid && !order.isDelivered && (
-                  <ListGroup.Item>
-                    {loadingDeliver && <LoadingBox></LoadingBox>}
-                    <div className="d-grid">
-                      <Button type="button" onClick={deliverOrderHandler}>
-                        Deliver Order
-                      </Button>
-                    </div>
-                  </ListGroup.Item>
-                )}
+                {order.paymentMethod !== 'CashOnDelivery' &&
+                  order.isPaid &&
+                  !order.isDelivered &&
+                  userInfo.isAdmin && (
+                    <ListGroup.Item>
+                      {loadingDeliver && <LoadingBox></LoadingBox>}
+                      <div className="d-grid">
+                        <Button type="button" onClick={deliverOrderHandler}>
+                          Deliver Order
+                        </Button>
+                      </div>
+                    </ListGroup.Item>
+                  )}
               </ListGroup>
             </Card.Body>
           </Card>
