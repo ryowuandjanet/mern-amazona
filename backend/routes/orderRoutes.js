@@ -3,7 +3,7 @@ import expressAsyncHandler from 'express-async-handler';
 import Order from '../models/orderModel.js';
 import User from '../models/userModel.js';
 import Product from '../models/productModel.js';
-import { isAuth, isAdmin, mailgun, payOrderEmailTemplate } from '../utils.js';
+import { isAuth, isAdmin, payOrderEmailTemplate } from '../utils.js';
 
 const orderRouter = express.Router();
 
@@ -14,7 +14,7 @@ orderRouter.get(
   expressAsyncHandler(async (req, res) => {
     const orders = await Order.find().populate('user', 'name');
     res.send(orders);
-  })
+  }),
 );
 
 orderRouter.post(
@@ -34,7 +34,7 @@ orderRouter.post(
 
     const order = await newOrder.save();
     res.status(201).send({ message: 'New Order Created', order });
-  })
+  }),
 );
 
 orderRouter.get(
@@ -78,7 +78,7 @@ orderRouter.get(
       },
     ]);
     res.send({ users, orders, dailyOrders, productCategories });
-  })
+  }),
 );
 
 orderRouter.get(
@@ -87,7 +87,7 @@ orderRouter.get(
   expressAsyncHandler(async (req, res) => {
     const orders = await Order.find({ user: req.user._id });
     res.send(orders);
-  })
+  }),
 );
 
 orderRouter.get(
@@ -100,7 +100,7 @@ orderRouter.get(
     } else {
       res.status(404).send({ message: 'Order Not Found' });
     }
-  })
+  }),
 );
 
 orderRouter.put(
@@ -116,7 +116,7 @@ orderRouter.put(
     } else {
       res.status(404).send({ message: 'Order Not Found' });
     }
-  })
+  }),
 );
 
 orderRouter.put(
@@ -125,7 +125,7 @@ orderRouter.put(
   expressAsyncHandler(async (req, res) => {
     const order = await Order.findById(req.params.id).populate(
       'user',
-      'email name'
+      'email name',
     );
     if (order) {
       order.isPaid = true;
@@ -138,29 +138,12 @@ orderRouter.put(
       };
 
       const updatedOrder = await order.save();
-      mailgun()
-        .messages()
-        .send(
-          {
-            from: 'Amazona <amazona@mg.yourdomain.com>',
-            to: `${order.user.name} <${order.user.email}>`,
-            subject: `New order ${order._id}`,
-            html: payOrderEmailTemplate(order),
-          },
-          (error, body) => {
-            if (error) {
-              console.log(error);
-            } else {
-              console.log(body);
-            }
-          }
-        );
 
       res.send({ message: 'Order Paid', order: updatedOrder });
     } else {
       res.status(404).send({ message: 'Order Not Found' });
     }
-  })
+  }),
 );
 
 orderRouter.delete(
@@ -175,7 +158,7 @@ orderRouter.delete(
     } else {
       res.status(404).send({ message: 'Order Not Found' });
     }
-  })
+  }),
 );
 
 export default orderRouter;
